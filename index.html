@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>BabyCare Dashboard 🐨</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-light: #dff3ea;
+      --bg-dark: #1e2d2a;
+      --card-light: #ffffffcc;
+      --card-dark: #2f3f3c;
+      --text-light: #2a4d45;
+      --text-dark: #e7f6f2;
+      --accent: #7fc8a9;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Nunito', sans-serif;
+      background-color: var(--bg-light);
+      background-image:
+        radial-gradient(circle at 10% 10%, #ffffff55 10%, transparent 11%),
+        radial-gradient(circle at 80% 20%, #ffffff55 10%, transparent 11%),
+        radial-gradient(circle at 30% 70%, #ffffff55 10%, transparent 11%);
+      color: var(--text-light);
+      transition: all 0.3s ease;
+    }
+
+    body.dark {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    header {
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin: 0;
+    }
+
+    header p {
+      font-size: 0.95rem;
+      opacity: 0.8;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    select, button {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      border: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background-color: var(--accent);
+      color: #fff;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-light);
+      border-radius: 24px;
+      padding: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+
+    body.dark .card {
+      background: var(--card-dark);
+    }
+
+    .card h3 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    .koala {
+      font-size: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>BabyCare Dashboard <span class="koala">🐨</span></h1>
+    <p>Ventas, crecimiento y cuidado con amor</p>
+  </header>
+
+  <div class="controls">
+    <select id="categoryFilter">
+      <option value="planes">Planes</option>
+      <option value="servicios">Servicios Premium</option>
+      <option value="usuarios">Usuarios Gratis</option>
+    </select>
+
+    <button onclick="toggleDarkMode()">🌙 Modo Oscuro</button>
+  </div>
+
+  <section class="dashboard">
+    <div class="card">
+      <h3>📈 Tendencia Mensual</h3>
+      <canvas id="trendChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>🐣 Promedio Anual</h3>
+      <canvas id="averageChart"></canvas>
+    </div>
+  </section>
+
+  <footer>
+    Hecho con 💚 para el cuidado del bebé · Diseño chibi
+  </footer>
+
+  <script>
+    const months = [
+      "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+      "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    ];
+
+    const dataSets = {
+      usuarios: {
+        label: "BabyDay (Gratis)",
+        data: [1200,1300,1450,1600,1800,2000,2200,2400,2600,2800,3000,3300]
+      },
+      planes: {
+        labels: ["Plan Esencial", "Plan Premium", "Plan Total Care"],
+        data: [
+          [160,170,185,200,220,240,265,290,320,350,390,430],
+          [110,120,135,150,170,190,210,235,260,290,320,360],
+          [70,75,85,95,110,125,140,160,180,200,225,260]
+        ]
+      },
+      servicios: {
+        labels: ["SleepCare", "BabyCam Live", "BabyAlert AI"],
+        data: [
+          [140,150,165,180,200,220,240,265,290,320,350,390],
+          [90,95,110,125,140,155,170,190,210,230,260,300],
+          [60,65,75,85,95,105,120,135,150,165,180,200]
+        ]
+      }
+    };
+
+    let trendChart, averageChart;
+
+    function buildCharts(category) {
+      if (trendChart) trendChart.destroy();
+      if (averageChart) averageChart.destroy();
+
+      const ctx1 = document.getElementById("trendChart");
+      const ctx2 = document.getElementById("averageChart");
+
+      if (category === "usuarios") {
+        trendChart = new Chart(ctx1, {
+          type: "line",
+          data: {
+            labels: months,
+            datasets: [{
+              label: dataSets.usuarios.label,
+              data: dataSets.usuarios.data,
+              tension: 0.4
+            }]
+          }
+        });
+
+        averageChart = new Chart(ctx2, {
+          type: "bar",
+          data: {
+            labels: ["Promedio"],
+            datasets: [{
+              label: "Usuarios",
+              data: [
+                dataSets.usuarios.data.reduce((a,b)=>a+b,0)/12
+              ]
+            }]
+          }
+        });
+      }
+
+      else {
+        trendChart = new Chart(ctx1, {
+          type: "line",
+          data: {
+            labels: months,
+            datasets: dataSets[category].labels.map((label, i) => ({
+              label,
+              data: dataSets[category].data[i],
+              tension: 0.4
+            }))
+          }
+        });
+
+        averageChart = new Chart(ctx2, {
+          type: "bar",
+          data: {
+            labels: dataSets[category].labels,
+            datasets: [{
+              label: "Promedio",
+              data: dataSets[category].data.map(
+                d => d.reduce((a,b)=>a+b,0)/12
+              )
+            }]
+          }
+        });
+      }
+    }
+
+    document.getElementById("categoryFilter")
+      .addEventListener("change", e => buildCharts(e.target.value));
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark");
+    }
+
+    buildCharts("planes");
+  </script>
+</body>
+</html>
